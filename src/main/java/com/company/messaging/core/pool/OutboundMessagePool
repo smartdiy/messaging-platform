@@ -1,0 +1,19 @@
+package com.company.messaging.core.pool;
+
+import com.company.messaging.core.model.Payload;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
+
+@Component
+public class OutboundMessagePool {
+    private final Sinks.Many<Payload> sink = Sinks.many().multicast().onBackpressureBuffer(1000);
+    
+    public void publish(Payload payload) {
+        sink.emitNext(payload, Sinks.EmitFailureHandler.FAIL_FAST);
+    }
+    
+    public Flux<Payload> subscribe() {
+        return sink.asFlux();
+    }
+}
