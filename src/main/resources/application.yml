@@ -11,12 +11,74 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics,prometheus,auditevents,loggers,threaddump,heapdump
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    metrics:
+      enabled: true
   metrics:
     export:
       prometheus:
         enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: 1.0
 
+# Tracing configuration
+tracing:
+  enabled: true
+  exporter:
+    type: jaeger # or zipkin, otlp
+    jaeger:
+      endpoint: http://jaeger:14268/api/traces
+    zipkin:
+      endpoint: http://zipkin:9411/api/v2/spans
+  correlation:
+    enabled: true
+    header-name: X-Correlation-ID
+
+# Audit configuration
+audit:
+  enabled: true
+  directory: ./audit-logs
+  retention-days: 90
+  max-file-size: 100MB
+  compress-old-files: true
+  include-metadata: true
+
+# Diagnostics
+diagnostics:
+  enabled: true
+  collection-interval: 30s
+  history-size: 1000
+  alert-thresholds:
+    error-rate: 0.05
+    queue-size: 1000
+    processing-time: 5000ms
+
+# Alerting
+alerting:
+  enabled: true
+  webhooks:
+    - url: ${SLACK_WEBHOOK:}
+      type: slack
+    - url: ${TEAMS_WEBHOOK:}
+      type: teams
+  rules:
+    - name: "High Error Rate"
+      condition: "error_rate > 0.05"
+      severity: "CRITICAL"
+    - name: "Queue Backlog"
+      condition: "queue_size > 1000"
+      severity: "WARNING"
+    - name: "Protocol Down"
+      condition: "protocol_status == 'DOWN'"
+      severity: "CRITICAL"        
 # Inbound Protocols
 inbound:
   file:
