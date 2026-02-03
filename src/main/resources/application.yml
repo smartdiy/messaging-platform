@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: messaging-platform
+  
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=10000,expireAfterWrite=600s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Inbound Protocols
+inbound:
+  file:
+    enabled: true
+    directory: ./inbound
+  rest:
+    enabled: true
+    path: /api/v1/messages
+  sftp:
+    enabled: false
+    host: localhost
+    port: 22
+    username: user
+    password: pass
+  jms:
+    enabled: false
+    connection-factory: jms/ConnectionFactory
+    destination: inboundQueue
+
+# Outbound Protocols
+outbound:
+  file:
+    enabled: true
+    directory: ./outbound
+  rest:
+    enabled: true
+    endpoint: http://localhost:8080/api/receive
+  email:
+    enabled: false
+    host: smtp.gmail.com
+    port: 587
+
+# Performance Tuning
+messaging:
+  pool:
+    buffer-size: 1000
+    processor-threads: 10
+    timeout-ms: 5000
+  monitoring:
+    enabled: true
+    stats-interval-seconds: 30
